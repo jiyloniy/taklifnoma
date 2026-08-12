@@ -1,8 +1,9 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
+const { processRsvp } = require('../lib/rsvp.cjs');
 
-const root = __dirname;
+const root = path.resolve(__dirname, '..');
 const port = Number(process.env.PORT || 4173);
 
 function loadLocalEnv() {
@@ -20,41 +21,6 @@ function loadLocalEnv() {
 }
 
 loadLocalEnv();
-
-async function sendTelegramRsvp(entry) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_CHAT_ID;
-  if (!token || !chatId) throw new Error('Telegram sozlamalari kiritilmagan');
-
-  const status = entry.attendance === 'yes' ? '✅ Kelaman' : '❌ Kelolmayman';
-  const sentAt = new Intl.DateTimeFormat('uz-UZ', {
-    timeZone: 'Asia/Tashkent',
-    dateStyle: 'long',
-    timeStyle: 'medium',
-  }).format(new Date(entry.createdAt));
-  const message = [
-    '💌 Yangi taklifnoma javobi',
-    '',
-    `👤 Ism: ${entry.name}`,
-    `📞 Telefon: ${entry.phone || 'Kiritilmagan'}`,
-    `💬 Javob: ${status}`,
-    `🕒 Vaqt: ${sentAt}`,
-    '',
-    'Sunnatulla & Tursinoy · 31 Avgust, 2026',
-  ].join('\n');
-
-  const telegramResponse = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text: message }),
-    signal: AbortSignal.timeout(12_000),
-  });
-  const telegramResult = await telegramResponse.json();
-  if (!telegramResponse.ok || !telegramResult.ok) {
-    throw new Error(telegramResult.description || 'Telegram xabarni qabul qilmadi');
-  }
-  return telegramResult.result.message_id;
-}
 
 const types = {
   '.html': 'text/html; charset=utf-8',
@@ -74,15 +40,7 @@ http.createServer((request, response) => {
     });
     request.on('end', async () => {
       try {
-        const payload = JSON.parse(body);
-        const entry = {
-          name: String(payload.name || '').trim().slice(0, 120),
-          phone: String(payload.phone || '').trim().slice(0, 40),
-          attendance: payload.attendance === 'no' ? 'no' : 'yes',
-          createdAt: new Date().toISOString(),
-        };
-        if (!entry.name) throw new Error('Ism kiritilmagan');
-        entry.telegramMessageId = await sendTelegramRsvp(entry);
+        const entry = await processRsvp(JSON.parse(body));
         const dataDirectory = path.join(root, 'data');
         const dataFile = path.join(dataDirectory, 'rsvps.json');
         fs.mkdirSync(dataDirectory, { recursive: true });
@@ -90,10 +48,10 @@ http.createServer((request, response) => {
         current.push(entry);
         fs.writeFileSync(dataFile, `${JSON.stringify(current, null, 2)}\n`, 'utf8');
         response.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' });
-        response.end(JSON.stringify({ ok: true }));
+        response.end(JSON.stringify({ ok: true, messageId: entry.telegramMessageId }));
       } catch (error) {
         console.error(`RSVP yuborilmadi: ${error.message}`);
-        response.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+        response.writeHead(error.message === 'Ism kiritilmagan' ? 400 : 502, { 'Content-Type': 'application/json; charset=utf-8' });
         response.end(JSON.stringify({ ok: false, error: error.message }));
       }
     });
@@ -103,8 +61,7 @@ http.createServer((request, response) => {
   const urlPath = decodeURIComponent((request.url || '/').split('?')[0]);
   const requested = urlPath === '/' ? '/index.html' : urlPath;
   const filePath = path.resolve(root, `.${requested}`);
-
-  if (!filePath.startsWith(root) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+  if (!filePath.startsWith(`${root}${path.sep}`) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
     response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     response.end('Sahifa topilmadi');
     return;
@@ -117,7 +74,6 @@ http.createServer((request, response) => {
     'Accept-Ranges': 'bytes',
     'Cache-Control': 'no-cache',
   };
-
   if (range) {
     const [startText, endText] = range.replace(/bytes=/, '').split('-');
     const start = Number(startText);
@@ -126,7 +82,6 @@ http.createServer((request, response) => {
     fs.createReadStream(filePath, { start, end }).pipe(response);
     return;
   }
-
   response.writeHead(200, { ...headers, 'Content-Length': stat.size });
   fs.createReadStream(filePath).pipe(response);
 }).listen(port, '0.0.0.0', () => {
