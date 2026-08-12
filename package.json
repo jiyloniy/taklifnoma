@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "node scripts/local-server.cjs",
-    "start": "node scripts/local-server.cjs"
+    "dev": "node scripts/local-server.cjs"
   }
 }
