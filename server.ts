@@ -1,9 +1,17 @@
 import { createServer } from 'node:http';
+import { readFileSync } from 'node:fs';
 import rsvpModule from './lib/rsvp.cjs';
 
 const { processRsvp } = rsvpModule;
+const indexHtml = readFileSync(new URL('./public/index.html', import.meta.url), 'utf8');
 
 const server = createServer((request, response) => {
+  if (request.method === 'GET' && (request.url === '/' || request.url === '/index.html')) {
+    response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    response.end(indexHtml);
+    return;
+  }
+
   if (request.method !== 'POST' || request.url !== '/api/rsvp') {
     response.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
     response.end(JSON.stringify({ ok: false, error: 'Sahifa topilmadi' }));
