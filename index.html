@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a1430" />
+    <meta name="description" content="Sunnatulla va Tursinoyning nikoh to‘yi taklifnomasi" />
+    <title>Sunnatulla & Tursinoy — Nikoh taklifnomasi</title>
+    <link rel="preload" href="/assets/samo-couple.jpg" as="image" />
+    <link rel="preload" href="/assets/font-1.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="samo" id="invitation">
+      <audio id="recitation" src="/assets/nikoh-recite.m4a" loop preload="auto"></audio>
+      <div class="sm-stars" id="stars" aria-hidden="true">
+        <span class="sm-shoot s1"></span>
+        <span class="sm-shoot s2"></span>
+      </div>
+
+      <div class="sm-gate" id="gate" role="dialog" aria-label="Taklifnomani ochish">
+        <div class="sm-gate-img"></div>
+        <div class="sm-gate-veil"></div>
+        <div class="sm-gate-flash" aria-hidden="true"></div>
+        <div class="sm-opening-sparks" id="openingSparks" aria-hidden="true"></div>
+        <div class="sm-gate-in">
+          <div class="sm-bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+          <div class="sm-gate-names">
+            <span>Sunnatulla</span><i>&</i><span>Tursinoy</span>
+          </div>
+          <div class="sm-gate-ref">31 AVGUST, 2026</div>
+          <button class="sm-open-btn" id="openButton" type="button">✦ Tilovat bilan ochish ✦</button>
+        </div>
+      </div>
+
+      <header class="sm-hero sm-rev">
+        <div class="sm-photo" role="img" aria-label="Sunnatulla va Tursinoy nikoh to‘yi taklifnomasi"></div>
+        <div class="sm-bismillah small">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+        <h1 class="sm-names"><span class="nm">Sunnatulla</span><span class="amp">&</span><span class="nm">Tursinoy</span></h1>
+        <div class="sm-date">31 Avgust, 2026</div>
+      </header>
+
+      <section class="sm-verse sm-rev">
+        <div class="sm-verse-ar" lang="ar" dir="rtl">وَخَلَقْنَاكُمْ أَزْوَاجًا</div>
+        <div class="sm-verse-tr">Wa khalaqnākum azwājā</div>
+        <div class="sm-verse-uz">«Va sizlarni juft-juft qilib yaratdik.»</div>
+        <div class="sm-verse-ref">An-Nabaʼ surasi, 78:8</div>
+        <div class="sm-verse-bar"><span></span></div>
+      </section>
+
+      <section class="sm-sec sm-invite sm-rev">
+        <div class="sm-kick">Muhtaram va qadrli mehmonimiz!</div>
+        <p class="sm-invite-text">Sizni oilamizning quvonchli va fayzli kuni — aziz farzandlarimizning nikoh to‘yi munosabati bilan 2026-yil 31-avgust kuni “Naxorgi osh” va soat 14:00 dagi “Bazm” dasturxonimizga taklif etamiz.</p>
+        <p class="sm-invite-wish">Sizning tashrifingiz davramizga va xonadonimizga fayz bag‘ishlaydi.</p>
+      </section>
+
+      <section class="sm-sec sm-rev">
+        <div class="sm-kick">Manzil</div>
+        <div class="sm-place">«Ko‘k Saroy» restorani</div>
+      </section>
+
+      <section class="sm-sec sm-rev">
+        <div class="sm-kick">Dastur</div>
+        <div class="sm-sched">
+          <div class="sm-sched-row">
+            <span class="sm-sched-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="14.5" r="5.5"/><circle cx="15" cy="14.5" r="5.5"/><path d="M7 5.5l2 2.5 2-2.5M13 5.5l2 2.5 2-2.5"/></svg></span>
+            <span class="sm-sched-t">Naxorgi osh</span><span class="sm-sched-d">31-avgust</span>
+          </div>
+          <div class="sm-sched-row">
+            <span class="sm-sched-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20s-6.8-4.2-9-8.2C1.4 8.6 3 5 6.4 5c2 0 3.3 1.1 5.6 3.5C14.3 6.1 15.6 5 17.6 5 21 5 22.6 8.6 21 11.8 18.8 15.8 12 20 12 20z"/></svg></span>
+            <span class="sm-sched-t">Bazm</span><span class="sm-sched-d">14:00</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="sm-sec sm-rev">
+        <p class="sm-dua">Cheksiz ehtirom va samimiyat ila:</p>
+        <div class="sm-family">Ergashevlar oilasi</div>
+      </section>
+
+      <section class="sm-sec sm-rev">
+        <div class="sm-kick">Sovg'a</div>
+        <button class="sm-card" id="copyCard" type="button" title="Karta raqamini nusxalash">9860 1701 0151 8687</button>
+        <div class="copy-note" id="copyNote" aria-live="polite"></div>
+      </section>
+
+      <section class="sm-sec sm-rsvp sm-rev">
+        <div class="sm-kick">Javob berish</div>
+        <p class="sm-addr">Iltimos, kelishingizni tasdiqlang.</p>
+        <form class="sm-form" id="rsvpForm">
+          <input placeholder="Ismingiz" required type="text" name="rname" autocomplete="name" />
+          <input placeholder="Telefon raqamingiz" inputmode="tel" type="tel" name="rphone" autocomplete="tel" />
+          <div class="rsvp-opts" role="group" aria-label="Kelishingizni tanlang">
+            <button type="button" class="on" data-answer="yes">Kelaman</button>
+            <button type="button" data-answer="no">Kelolmayman</button>
+          </div>
+          <button type="submit" class="sm-btn">Tasdiqlash ✦</button>
+        </form>
+        <div class="rsvp-thanks" id="rsvpThanks" hidden></div>
+      </section>
+
+      <footer class="sm-foot">Ergashevlar oilasi · 31 Avgust, 2026</footer>
+      <div class="made-with"><span>Taklifnoma muallifi —</span> <a href="https://t.me/qodeer" target="_blank" rel="noopener">Qodirxon</a></div>
+      <button class="sm-music" id="musicButton" aria-label="Tilovatni yoqish" aria-pressed="false">♪</button>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

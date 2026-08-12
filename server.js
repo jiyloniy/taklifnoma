@@ -1,0 +1,134 @@
+const http = require('node:http');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const root = __dirname;
+const port = Number(process.env.PORT || 4173);
+
+function loadLocalEnv() {
+  const envPath = path.join(root, '.env');
+  if (!fs.existsSync(envPath)) return;
+  for (const rawLine of fs.readFileSync(envPath, 'utf8').split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+    const separator = line.indexOf('=');
+    if (separator < 1) continue;
+    const key = line.slice(0, separator).trim();
+    const value = line.slice(separator + 1).trim().replace(/^(['"])(.*)\1$/, '$2');
+    if (!process.env[key]) process.env[key] = value;
+  }
+}
+
+loadLocalEnv();
+
+async function sendTelegramRsvp(entry) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
+  if (!token || !chatId) throw new Error('Telegram sozlamalari kiritilmagan');
+
+  const status = entry.attendance === 'yes' ? '✅ Kelaman' : '❌ Kelolmayman';
+  const sentAt = new Intl.DateTimeFormat('uz-UZ', {
+    timeZone: 'Asia/Tashkent',
+    dateStyle: 'long',
+    timeStyle: 'medium',
+  }).format(new Date(entry.createdAt));
+  const message = [
+    '💌 Yangi taklifnoma javobi',
+    '',
+    `👤 Ism: ${entry.name}`,
+    `📞 Telefon: ${entry.phone || 'Kiritilmagan'}`,
+    `💬 Javob: ${status}`,
+    `🕒 Vaqt: ${sentAt}`,
+    '',
+    'Sunnatulla & Tursinoy · 31 Avgust, 2026',
+  ].join('\n');
+
+  const telegramResponse = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text: message }),
+    signal: AbortSignal.timeout(12_000),
+  });
+  const telegramResult = await telegramResponse.json();
+  if (!telegramResponse.ok || !telegramResult.ok) {
+    throw new Error(telegramResult.description || 'Telegram xabarni qabul qilmadi');
+  }
+  return telegramResult.result.message_id;
+}
+
+const types = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.jpg': 'image/jpeg',
+  '.m4a': 'audio/mp4',
+  '.woff2': 'font/woff2',
+};
+
+http.createServer((request, response) => {
+  if (request.method === 'POST' && request.url === '/api/rsvp') {
+    let body = '';
+    request.on('data', chunk => {
+      body += chunk;
+      if (body.length > 16_384) request.destroy();
+    });
+    request.on('end', async () => {
+      try {
+        const payload = JSON.parse(body);
+        const entry = {
+          name: String(payload.name || '').trim().slice(0, 120),
+          phone: String(payload.phone || '').trim().slice(0, 40),
+          attendance: payload.attendance === 'no' ? 'no' : 'yes',
+          createdAt: new Date().toISOString(),
+        };
+        if (!entry.name) throw new Error('Ism kiritilmagan');
+        entry.telegramMessageId = await sendTelegramRsvp(entry);
+        const dataDirectory = path.join(root, 'data');
+        const dataFile = path.join(dataDirectory, 'rsvps.json');
+        fs.mkdirSync(dataDirectory, { recursive: true });
+        const current = fs.existsSync(dataFile) ? JSON.parse(fs.readFileSync(dataFile, 'utf8')) : [];
+        current.push(entry);
+        fs.writeFileSync(dataFile, `${JSON.stringify(current, null, 2)}\n`, 'utf8');
+        response.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' });
+        response.end(JSON.stringify({ ok: true }));
+      } catch (error) {
+        console.error(`RSVP yuborilmadi: ${error.message}`);
+        response.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
+        response.end(JSON.stringify({ ok: false, error: error.message }));
+      }
+    });
+    return;
+  }
+
+  const urlPath = decodeURIComponent((request.url || '/').split('?')[0]);
+  const requested = urlPath === '/' ? '/index.html' : urlPath;
+  const filePath = path.resolve(root, `.${requested}`);
+
+  if (!filePath.startsWith(root) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+    response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    response.end('Sahifa topilmadi');
+    return;
+  }
+
+  const stat = fs.statSync(filePath);
+  const range = request.headers.range;
+  const headers = {
+    'Content-Type': types[path.extname(filePath)] || 'application/octet-stream',
+    'Accept-Ranges': 'bytes',
+    'Cache-Control': 'no-cache',
+  };
+
+  if (range) {
+    const [startText, endText] = range.replace(/bytes=/, '').split('-');
+    const start = Number(startText);
+    const end = endText ? Number(endText) : stat.size - 1;
+    response.writeHead(206, { ...headers, 'Content-Range': `bytes ${start}-${end}/${stat.size}`, 'Content-Length': end - start + 1 });
+    fs.createReadStream(filePath, { start, end }).pipe(response);
+    return;
+  }
+
+  response.writeHead(200, { ...headers, 'Content-Length': stat.size });
+  fs.createReadStream(filePath).pipe(response);
+}).listen(port, '0.0.0.0', () => {
+  console.log(`Samo taklifnoma: http://localhost:${port}`);
+});
