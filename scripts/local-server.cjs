@@ -4,6 +4,7 @@ const path = require('node:path');
 const { processRsvp } = require('../lib/rsvp.cjs');
 
 const root = path.resolve(__dirname, '..');
+const publicRoot = path.join(root, 'public');
 const port = Number(process.env.PORT || 4173);
 
 function loadLocalEnv() {
@@ -60,8 +61,8 @@ http.createServer((request, response) => {
 
   const urlPath = decodeURIComponent((request.url || '/').split('?')[0]);
   const requested = urlPath === '/' ? '/index.html' : urlPath;
-  const filePath = path.resolve(root, `.${requested}`);
-  if (!filePath.startsWith(`${root}${path.sep}`) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+  const filePath = path.resolve(publicRoot, `.${requested}`);
+  if (!filePath.startsWith(`${publicRoot}${path.sep}`) || !fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
     response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     response.end('Sahifa topilmadi');
     return;
