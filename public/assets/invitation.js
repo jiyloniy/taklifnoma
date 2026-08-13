@@ -138,15 +138,4 @@ document.querySelector('#rsvpForm').addEventListener('submit', async (event) => 
   event.currentTarget.hidden = true;
 });
 
-document.querySelector('#copyCard').addEventListener('click', async () => {
-  const note = document.querySelector('#copyNote');
-  try {
-    await navigator.clipboard.writeText('9860170101518687');
-    note.textContent = 'Karta raqami nusxalandi ✓';
-  } catch {
-    note.textContent = '9860170101518687';
-  }
-  setTimeout(() => { note.textContent = ''; }, 2500);
-});
-
 document.body.style.overflow = 'hidden';
